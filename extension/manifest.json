@@ -6,7 +6,6 @@
   "author": "Stéphane Depierrepont",
 
   "permissions": [
-    "storage",
     "webRequest",
     "webRequestBlocking",
     "<all_urls>"
