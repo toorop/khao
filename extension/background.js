@@ -114,12 +114,38 @@ function cacheSet(key, value) {
 }
 
 
-// set
-
-
+// handle request
 browser.webRequest.onBeforeSendHeaders.addListener(
     rewriteCookies,
     {urls: ["<all_urls>"]},
     ["blocking", "requestHeaders"]
 );
+
+function enableKhao(){
+    browser.webRequest.onBeforeSendHeaders.addListener(
+        rewriteCookies,
+        {urls: ["<all_urls>"]},
+        ["blocking", "requestHeaders"]
+    );
+    browser.browserAction.setIcon({path: "pic/19-on.png"});
+}
+
+function disableKaho(){
+    browser.webRequest.onBeforeSendHeaders.removeListener(rewriteCookies);
+    browser.browserAction.setIcon({path: "pic/19-off.png"});
+}
+
+
+// handle click
+browser.browserAction.onClicked.addListener(function(){
+    console.log("click click");
+    if (browser.webRequest.onBeforeSendHeaders.hasListener(rewriteCookies)) {
+        console.log("remove listener");
+        disableKaho();
+    } else {
+        console.log("add listener");
+        enableKhao();
+    }
+});
+
 

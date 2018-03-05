@@ -11,13 +11,21 @@
     "<all_urls>"
   ],
 
-  "background": {
-    "scripts": ["axios.min.js","cookie.js","background.js"]
+  "icons": {
+    "16": "pic/16-on.png",
+    "48": "pic/48-on.png",
+    "128": "pic/128-on.png"
   },
 
-  "applications": {
-    "gecko": {
-      "id": "khao@khao.io"
-    }
+  "browser_action": {
+    "default_icon": {
+      "19": "pic/19-on.png",
+      "38": "pic/38-on.png"
+    },
+    "default_title": "On/Off Khao"
+  },
+
+  "background": {
+    "scripts": ["axios.min.js","cookie.js","background.js"]
   }
 }
