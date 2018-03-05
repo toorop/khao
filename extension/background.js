@@ -14,7 +14,6 @@ function rewriteCookies(req) {
         return
     }
 
-
     for (let header of req.requestHeaders) {
         if (header.name.toLowerCase() === 'cookie') {
             //console.log("OLD headers: ", req.requestHeaders);
