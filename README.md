@@ -1,4 +1,4 @@
 ## khao
 
-For more infosee: [https://toorop.fr/post/chrome-extension-navigateur-vie-privee/](https://toorop.fr/post/chrome-extension-navigateur-vie-privee/) (french)
+For more info: [https://toorop.fr/post/chrome-extension-navigateur-vie-privee/](https://toorop.fr/post/chrome-extension-navigateur-vie-privee/) (french)
 
