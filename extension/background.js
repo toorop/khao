@@ -1,8 +1,8 @@
 var browser = browser || chrome;
 
 // cache
-var cache = {};
-var cacheExpireAfter = 900;
+let cache = {};
+let cacheExpireAfter = 900;
 
 function rewriteCookies(req) {
     //console.log("Newrequest from tab " + req.tabId + " " + req.method + " " + req.url);
@@ -14,19 +14,29 @@ function rewriteCookies(req) {
         return
     }
 
+    // get targeted cookies
+    let targetedCookies = cookies2switch.get('*');
+    let domcookies = cookies2switch.get(domain);
+    if (domcookies !== undefined) {
+        targetedCookies = targetedCookies.concat(domcookies);
+    }
+
+    //console.log("targetedCookies", targetedCookies, "domain", domain);
+
     for (let header of req.requestHeaders) {
         if (header.name.toLowerCase() === 'cookie') {
             //console.log("OLD headers: ", req.requestHeaders);
             let cookies = parseHeader(header.value);
             cookies.forEach(function (cookie) {
-                if (cookie.name === '_ga') {
-                    //console.log("domaine: " + domain + " -> " + cookie.value);
+                if (targetedCookies.indexOf(cookie.name.toLowerCase()) !== -1){
                     // get form local cache
-                    let newValue = cacheGet(domain + '_' + cookie.Name);
+                    let newValue = cacheGet(domain + '_' + cookie.name);
                     //console.log("Value form cache: " + newValue);
                     if (newValue !== null) {
-                        rebuildRequestHeaders(req.requestHeaders, "_ga", newValue);
-                        console.log("NEW cookie from cache: ", newValue);
+                        rebuildRequestHeaders(req.requestHeaders, cookie.name, newValue);
+                        if (newValue !== cookie.value) {
+                            console.log("NEW cookie for " + domain + "." + cookie.name + " fetched from cache: ", newValue);
+                        }
                         return {requestHeaders: req.requestHeaders}
                     }
                     // send cookie & receive a new one
@@ -35,11 +45,13 @@ function rewriteCookies(req) {
                         Value: cookie.value,
                         Domain: domain
                     }).then(function (response) {
-                        console.log("New cookie from switcher: " + response.data.Value);
-                        cacheSet(domain + '_' + cookie.Name, response.data.Value);
+                        if (response.data.Value !== cookie.value) {
+                            console.log("NEW cookie for " + domain + "." + cookie.name + " fetched from  switcher: ", response.data.Value);
+                        }
+                        cacheSet(domain + '_' + cookie.name, response.data.Value);
                         cookie.value = response.data.value;
                         // rebuild header with new value
-                        rebuildRequestHeaders(req.requestHeaders, "_ga", response.data.Value);
+                        rebuildRequestHeaders(req.requestHeaders, cookie.name, response.data.Value);
                         //console.log("NEW headers: ", req.requestHeaders);
                         return {requestHeaders: req.requestHeaders}
                     }).catch(function (err) {
@@ -58,6 +70,21 @@ function getDomain(url) {
     let u = new URL(url);
     return u.hostname;
 }
+
+// cookie parser
+var parseHeader = function (header) {
+    let cookies = [];
+    let p = header.split(';');
+    p.forEach(function (v) {
+        let nameValue = v.split('=');
+        cookies.push({
+            name: nameValue[0].trim(),
+            value: nameValue.splice(1).join('=').trim()
+        });
+    });
+    return cookies;
+};
+
 
 // update headers request with new cookie value
 function rebuildRequestHeaders(headers, cookieName, cookieValue) {
@@ -92,7 +119,7 @@ function rebuildRequestHeaders(headers, cookieName, cookieValue) {
 
 // get value from cache
 function cacheGet(key) {
-    cookie = cache[key];
+    let cookie = cache[key];
     if (cookie !== undefined) {
         // remove cookie if expired
         if (cookie.expireAt > Date.now()) {
@@ -120,7 +147,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
     ["blocking", "requestHeaders"]
 );
 
-function enableKhao(){
+function enableKhao() {
     browser.webRequest.onBeforeSendHeaders.addListener(
         rewriteCookies,
         {urls: ["<all_urls>"]},
@@ -129,14 +156,13 @@ function enableKhao(){
     browser.browserAction.setIcon({path: "pic/19-on.png"});
 }
 
-function disableKaho(){
+function disableKaho() {
     browser.webRequest.onBeforeSendHeaders.removeListener(rewriteCookies);
     browser.browserAction.setIcon({path: "pic/19-off.png"});
 }
 
-
 // handle click
-browser.browserAction.onClicked.addListener(function(){
+browser.browserAction.onClicked.addListener(function () {
     console.log("click click");
     if (browser.webRequest.onBeforeSendHeaders.hasListener(rewriteCookies)) {
         console.log("remove listener");
